@@ -3,128 +3,137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>数式整理 · MathMD Cleaner</title>
-  <meta name="description" content="将 AI 生成 Markdown 中的 \\[ \\] 与 \\( \\) 替换为 $$ 与 $，并顺带清理常见格式噪音。" />
+  <title>Markdown 整理器 · 数学公式分隔符清洗</title>
+  <meta name="description" content="在线清洗 AI 生成的 Markdown：将 \( \) 与 \[ \] 转为 $ 与 $$，并附带常用整理规则。" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">∑</div>
-        <div class="brand-text">
-          <h1>数式整理</h1>
-          <p>MathMD Cleaner · AI Markdown 公式定界符规范化</p>
+        <div class="logo" aria-hidden="true">∑</div>
+        <div>
+          <h1>Markdown 整理器</h1>
+          <p class="tagline">AI 文稿 · 数学分隔符 · 一键清洗</p>
         </div>
       </div>
-
       <div class="top-actions">
-        <div class="segmented" role="group" aria-label="转换方向">
-          <button type="button" class="seg-btn is-active" data-mode="forward" title="\\[ \\] → $$，\\( \\) → $">正向整理</button>
-          <button type="button" class="seg-btn" data-mode="reverse" title="$$ → \\[ \\]，$ → \\( \\)">反向导出</button>
-        </div>
-        <button type="button" class="icon-btn" id="themeToggle" title="切换主题" aria-label="切换主题">
-          <span class="theme-icon light">☀</span>
-          <span class="theme-icon dark">☾</span>
-        </button>
+        <button type="button" class="btn ghost" id="btn-sample" title="填入示例文本">示例</button>
+        <button type="button" class="btn ghost" id="btn-clear" title="清空输入">清空</button>
+        <button type="button" class="btn ghost" id="btn-theme" title="切换主题" aria-label="切换主题">主题</button>
       </div>
     </header>
 
     <section class="toolbar">
-      <div class="toolbar-main">
-        <button type="button" class="primary-btn" id="convertBtn">
-          <span class="btn-dot"></span>
-          立即整理
-        </button>
-        <button type="button" class="ghost-btn" id="sampleBtn">载入示例</button>
-        <button type="button" class="ghost-btn" id="clearBtn">清空</button>
-        <button type="button" class="ghost-btn" id="copyBtn">复制结果</button>
-        <button type="button" class="ghost-btn" id="downloadBtn">下载 .md</button>
+      <div class="toolbar-row">
+        <label class="check">
+          <input type="checkbox" id="opt-spaced-first" checked />
+          <span>优先匹配带空格的 <code>\( … \)</code></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="opt-trim-inner" checked />
+          <span>去掉公式内侧多余空格</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="opt-display-block" checked />
+          <span>行级 <code>\[ \]</code> 转多行 <code>$$</code></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="opt-protect-code" checked />
+          <span>保护代码块 / 行内代码</span>
+        </label>
       </div>
-      <button type="button" class="ghost-btn chips-toggle" id="chipsToggle" aria-expanded="true">
-        规则设置
-        <span class="chev">▾</span>
-      </button>
-    </section>
-
-    <section class="chips-panel is-open" id="chipsPanel">
-      <div class="chips-row" id="rulesChips" role="group" aria-label="转换规则"></div>
-      <p class="chips-hint">点击芯片开关规则；正向把 AI 常见的 <code>\[ \]</code> / <code>\( \)</code> 整理成 Markdown 标准定界符。</p>
+      <div class="toolbar-row">
+        <label class="check">
+          <input type="checkbox" id="opt-collapse-blank" checked />
+          <span>压缩多余空行</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="opt-trim-trailing" checked />
+          <span>去除行尾空白</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="opt-normalize-headings" checked />
+          <span>标题井号后补空格</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="opt-strip-boilerplate" />
+          <span>去掉 AI 开场套话</span>
+        </label>
+      </div>
+      <div class="toolbar-row">
+        <label class="check">
+          <input type="checkbox" id="opt-double-escape" checked />
+          <span>处理 <code>\\(</code> / <code>\\[</code> 双重转义</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="opt-align-env" checked />
+          <span><code>align / gather</code> 包进 <code>$$</code></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="opt-dollar-gaps" checked />
+          <span>清理 <code>$ $</code> 空公式残留</span>
+        </label>
+        <div class="spacer"></div>
+        <button type="button" class="btn primary" id="btn-run">整理 Markdown</button>
+      </div>
     </section>
 
     <main class="workspace">
-      <section class="pane pane-input">
+      <section class="pane">
         <div class="pane-head">
           <h2>输入</h2>
-          <div class="pane-meta">
-            <span id="inputStats">0 字 · 0 行</span>
-            <label class="file-label">
-              导入 .md
-              <input type="file" id="fileInput" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden />
-            </label>
-          </div>
+          <span class="meta" id="in-meta">0 字符</span>
         </div>
-        <textarea
-          id="inputArea"
-          class="editor"
-          spellcheck="false"
-          placeholder="把 AI 生成的 Markdown 粘贴到这里…&#10;&#10;例如：&#10;行间公式：\[ E = mc^2 \]&#10;行内公式：\( a^2 + b^2 = c^2 \)"
-        ></textarea>
+        <textarea id="input" spellcheck="false" placeholder="把 AI 生成的 Markdown 粘贴到这里……
+例如：
+  这是行内公式 \( E = mc^2 \)。
+  这是块级公式：
+  \[
+    \int_0^1 x^2 \, dx = \frac{1}{3}
+  \]
+"></textarea>
       </section>
 
-      <section class="pane pane-output">
+      <section class="pane">
         <div class="pane-head">
-          <div class="tabs" role="tablist">
-            <button type="button" class="tab is-active" role="tab" aria-selected="true" data-tab="text">整理结果</button>
-            <button type="button" class="tab" role="tab" aria-selected="false" data-tab="preview">渲染预览</button>
-            <button type="button" class="tab" role="tab" aria-selected="false" data-tab="log">变更明细</button>
-          </div>
-          <div class="pane-meta">
-            <span id="outputStats" class="stat-chip">等待输入</span>
+          <h2>输出</h2>
+          <div class="pane-actions">
+            <span class="meta" id="out-meta">0 字符</span>
+            <button type="button" class="btn small" id="btn-copy">复制</button>
+            <button type="button" class="btn small" id="btn-download">下载 .md</button>
           </div>
         </div>
-
-        <div class="tab-panels">
-          <div class="tab-panel is-active" id="panel-text" role="tabpanel">
-            <textarea id="outputArea" class="editor" readonly spellcheck="false" placeholder="整理后的 Markdown 会出现在这里"></textarea>
-          </div>
-          <div class="tab-panel" id="panel-preview" role="tabpanel">
-            <article id="previewArea" class="preview markdown-body">
-              <p class="preview-empty">切换到此处可预览渲染效果（公式由 KaTeX 绘制）。</p>
-            </article>
-          </div>
-          <div class="tab-panel" id="panel-log" role="tabpanel">
-            <ul id="changeLog" class="change-log">
-              <li class="log-empty">尚无变更。粘贴内容后会自动整理。</li>
-            </ul>
-          </div>
-        </div>
+        <textarea id="output" spellcheck="false" placeholder="整理结果会出现在这里。" readonly></textarea>
       </section>
     </main>
 
-    <section class="drop-hint" id="dropHint" hidden>
-      <div class="drop-card">松开即可导入 Markdown 文件</div>
+    <section class="bottom">
+      <div class="stats" id="stats" aria-live="polite">
+        <div class="stat empty">尚未整理。粘贴内容后点击「整理 Markdown」，或直接编辑输入框自动预览。</div>
+      </div>
+
+      <div class="preview-wrap">
+        <div class="pane-head">
+          <h2>预览</h2>
+          <span class="meta">marked + KaTeX</span>
+        </div>
+        <div id="preview" class="preview prose"></div>
+      </div>
     </section>
 
     <footer class="footer">
-      <div class="footer-left">
-        <span class="status" id="statusText">就绪 · 修改输入后自动整理</span>
-      </div>
-      <div class="footer-right">
-        <span id="replaceCount">0 处替换</span>
-        <span class="sep">·</span>
-        <span>本地处理 · <kbd>⌘/Ctrl+Enter</kbd> 整理 · <kbd>⌘/Ctrl+S</kbd> 下载</span>
-      </div>
+      <p>规则优先级：双重转义 → 带空格 <code>\( \)</code> → 紧凑 <code>\(\)</code> → 行级 <code>\[ \]</code> → 其它整理项。代码块与行内代码默认不改动。</p>
     </footer>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" hidden></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" defer></script>
-  <script src="app.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
